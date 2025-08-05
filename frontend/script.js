@@ -22,10 +22,13 @@ document
         if (data.error) {
           resultDiv.textContent = "Error: " + data.error;
           resultDiv.style.color = "red";
-        } else {
-          resultDiv.textContent =
-            "You can bunk " + data.bunksPossible + " more classes!";
-          resultDiv.style.color = "green";
+        } // This is the NEW code
+        else {
+          // This new version uses innerHTML to show the bunk count AND the recommendation
+          resultDiv.innerHTML = `You can bunk <strong>${data.bunksPossible}</strong> more classes. <br><small>${data.recommendation}</small>`;
+
+          // This uses a variable for color that works well with the Pico.css framework
+          resultDiv.style.color = "var(--contrast)";
         }
       })
       .catch((error) => {
