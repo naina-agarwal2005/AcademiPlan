@@ -1,50 +1,84 @@
-// === FILE: frontend/script.js (UPDATED FOR ATTENDANCE BUTTONS) ===
+// === FILE: frontend/script.js (FINAL CORRECTED VERSION) ===
 
 document.addEventListener("DOMContentLoaded", () => {
+  // --- Get references to all the important elements ---
   const subjectsContainer = document.getElementById("subjects-container");
   const addSubjectBtn = document.getElementById("add-subject-btn");
   const modal = document.getElementById("add-subject-modal");
   const addSubjectForm = document.getElementById("add-subject-form");
+  const pages = document.querySelectorAll(".page");
+  const navLinks = document.querySelectorAll(".nav-link");
+  const historyPageContainer = document.getElementById("history-page");
 
-  // --- Function to handle clicking the 'Attended' or 'Bunked' buttons ---
+  // --- (FINAL, CORRECTED) Function to fetch and display the history log ---
+  const fetchHistory = async () => {
+    historyPageContainer.innerHTML =
+      "<h2>Your Recent Activity</h2><p>Loading history...</p>";
+    try {
+      const response = await fetch("http://127.0.0.1:5000/api/history");
+      const historyLog = await response.json();
+
+      if (historyLog.error) {
+        historyPageContainer.innerHTML = `<p style="color: red;">${historyLog.error}</p>`;
+        return;
+      }
+      if (historyLog.length === 0) {
+        historyPageContainer.innerHTML =
+          "<h2>Your Recent Activity</h2><p>No history yet. Mark attendance on the dashboard to start a log.</p>";
+        return;
+      }
+
+      let historyHTML = "<h2>Your Recent Activity</h2><article>";
+      historyLog.forEach((record) => {
+        const statusText =
+          record.status === "attended" ? "✅ Attended" : "❌ Bunked";
+        // A more robust way to handle the date string from Python
+        const date = new Date(record.timestamp.replace(" ", "T") + "Z");
+        historyHTML += `
+                    <div class="history-item">
+                        <p>
+                            <strong>${
+                              record.subjectName || "Unknown Subject"
+                            }</strong>: Marked as ${statusText}
+                        </p>
+                        <small>${date.toLocaleString()}</small>
+                    </div>
+                `;
+      });
+      historyHTML += "</article>";
+      historyPageContainer.innerHTML = historyHTML;
+    } catch (error) {
+      console.error("History fetch error:", error);
+      historyPageContainer.innerHTML = `<p style="color: red;">Could not fetch history.</p>`;
+    }
+  };
+
+  // --- Function to handle attendance updates ---
   const handleAttendanceUpdate = async (event) => {
     const button = event.target;
     const subjectId = button.dataset.subjectId;
     const status = button.dataset.status;
-
-    // Briefly disable buttons to prevent double-clicking
     button.disabled = true;
     button.textContent = "Updating...";
-
     try {
-      await fetch("http://127.0.0.1:5000/api/attendance", {
+      const response = await fetch("http://127.0.0.1:5000/api/attendance", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ subjectId, status }),
       });
-      // If successful, refresh the whole dashboard to show new data
+      if (!response.ok) throw new Error("Update failed");
       fetchAndDisplaySubjects();
     } catch (error) {
       alert("Error updating attendance.");
-      console.error("Update error:", error);
-      // Re-enable the button if there was an error
-      button.disabled = false;
     }
   };
 
-  // --- 1. Function to Fetch and Display Subjects ---
-  // In frontend/script.js, replace the entire fetchAndDisplaySubjects function
-
-  // In frontend/script.js, replace the entire fetchAndDisplaySubjects function
-
+  // --- Function to fetch and display subjects ---
   const fetchAndDisplaySubjects = async () => {
     try {
       const response = await fetch("http://127.0.0.1:5000/api/subjects");
       const subjects = await response.json();
-
-      const subjectsContainer = document.getElementById("subjects-container");
       subjectsContainer.innerHTML = "";
-
       if (subjects.length === 0) {
         subjectsContainer.innerHTML =
           "<p>No subjects found. Add a new subject to get started!</p>";
@@ -52,58 +86,45 @@ document.addEventListener("DOMContentLoaded", () => {
         subjects.forEach((subject) => {
           const card = document.createElement("article");
           card.className = "subject-card";
-
-          // --- (NEW) Logic to determine progress bar color using standard hex codes ---
-          let progressBarColor = "#28a745"; // Green for safe
-          if (subject.currentAttendance < subject.minAttendance) {
-            progressBarColor = "#dc3545"; // Red for danger
-          } else if (subject.currentAttendance < subject.minAttendance + 5) {
-            progressBarColor = "#ffc107"; // Yellow for warning
-          }
-
-          card.innerHTML = `
-                    <h3>${subject.subjectName}</h3>
-                    <div class="attendance-stats">
-                        <span>${subject.attendedClasses} / ${subject.totalClasses} attended</span>
-                        <strong>${subject.currentAttendance}%</strong>
-                    </div>
-                    <div class="attendance-bar">
-                        <div class="attendance-progress" style="width: ${subject.currentAttendance}%; background-color: ${progressBarColor};"></div>
-                    </div>
-                    <hr>
-                    <p>
-                        <strong>Bunks Available: ${subject.bunksPossible}</strong>
-                        <br>
-                        <small><em>${subject.recommendation}</em></small>
-                    </p>
-                    <div class="card-actions">
-                        <button class="attended-btn attendance-btn" data-subject-id="${subject._id}" data-status="attended">✔️ Attended</button>
-                        <button class="bunked-btn attendance-btn" data-subject-id="${subject._id}" data-status="bunked">❌ Bunked</button>
-                    </div>
-                `;
+          let progressBarColor = "#28a745";
+          if (subject.currentAttendance < subject.minAttendance)
+            progressBarColor = "#dc3545";
+          else if (subject.currentAttendance < subject.minAttendance + 5)
+            progressBarColor = "#ffc107";
+          card.innerHTML = `<h3>${subject.subjectName}</h3><div class="attendance-stats"><span>${subject.attendedClasses} / ${subject.totalClasses} classes attended</span><strong>${subject.currentAttendance}%</strong></div><div class="attendance-bar"><div class="attendance-progress" style="width: ${subject.currentAttendance}%; background-color: ${progressBarColor};"></div></div><hr><p><strong>Bunks Available: ${subject.bunksPossible}</strong><br><small><em>${subject.recommendation}</em></small></p><div class="card-actions"><button class="attended-btn attendance-btn" data-subject-id="${subject._id}" data-status="attended">✔️ Attended</button><button class="bunked-btn attendance-btn" data-subject-id="${subject._id}" data-status="bunked">❌ Bunked</button></div>`;
           subjectsContainer.appendChild(card);
         });
-
-        // Re-add event listeners after cards are created
         document.querySelectorAll(".attendance-btn").forEach((button) => {
           button.addEventListener("click", handleAttendanceUpdate);
         });
       }
     } catch (error) {
       subjectsContainer.innerHTML =
-        '<p style="color: red;">Error fetching subjects. Is the server running?</p>';
+        '<p style="color: red;">Error fetching subjects.</p>';
     }
   };
 
-  // --- 2. Logic for "Add Subject" Modal (remains the same) ---
-  addSubjectBtn.addEventListener("click", () => modal.showModal());
-  modal.addEventListener("click", (event) => {
-    if (event.target === modal || event.target.classList.contains("close")) {
-      modal.close();
-    }
+  // --- Tab Navigation Logic ---
+  navLinks.forEach((link) => {
+    link.addEventListener("click", (e) => {
+      e.preventDefault();
+      const pageId = link.dataset.page;
+      pages.forEach((page) => page.classList.remove("active"));
+      navLinks.forEach((nav) => nav.classList.remove("active"));
+      document.getElementById(`${pageId}-page`).classList.add("active");
+      link.classList.add("active");
+      if (pageId === "history") {
+        fetchHistory();
+      }
+    });
   });
 
-  // --- 3. Logic for Submitting the New Subject Form (remains the same) ---
+  // --- Modal and Form Logic ---
+  addSubjectBtn.addEventListener("click", () => modal.showModal());
+  modal.addEventListener("click", (event) => {
+    if (event.target === modal || event.target.classList.contains("close"))
+      modal.close();
+  });
   addSubjectForm.addEventListener("submit", async (event) => {
     event.preventDefault();
     const formData = new FormData(addSubjectForm);

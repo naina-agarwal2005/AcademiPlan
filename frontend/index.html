@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>AcademiPlan - Dashboard</title>
+    <title>AcademiPlan - Your Academic Dashboard</title>
     <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"
@@ -20,7 +20,22 @@
         </ul>
       </nav>
 
-      <div id="subjects-container"></div>
+      <nav>
+        <ul>
+          <li>
+            <a href="#" class="nav-link active" data-page="calculator"
+              >Dashboard</a
+            >
+          </li>
+          <li><a href="#" class="nav-link" data-page="history">History</a></li>
+        </ul>
+      </nav>
+
+      <div id="calculator-page" class="page active">
+        <div id="subjects-container"></div>
+      </div>
+
+      <div id="history-page" class="page"></div>
     </main>
 
     <dialog id="add-subject-modal">
