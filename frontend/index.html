@@ -2,40 +2,76 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Can I Bunk?</title>
-    <link rel="stylesheet" href="style.css" />
-    <!-- <link
+    <title>AcademiPlan - Dashboard</title>
+    <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"
-    /> -->
+    />
+    <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <div class="container">
-      <h1>Should I Bunk?</h1>
-      <form id="attendance-form">
-        <input
-          type="number"
-          id="totalClasses"
-          placeholder="Total Classes So Far"
-          required
-        />
-        <input
-          type="number"
-          id="attendedClasses"
-          placeholder="Classes Attended"
-          required
-        />
-        <input
-          type="number"
-          id="minAttendance"
-          placeholder="Min. Attendance (%)"
-          value="75"
-          required
-        />
-        <button type="submit">Calculate</button>
-      </form>
-      <div id="result"></div>
-    </div>
+    <main class="container">
+      <nav>
+        <ul>
+          <li><strong>AcademiPlan</strong></li>
+        </ul>
+        <ul>
+          <li><button id="add-subject-btn">Add New Subject</button></li>
+        </ul>
+      </nav>
+
+      <div id="subjects-container"></div>
+    </main>
+
+    <dialog id="add-subject-modal">
+      <article>
+        <header>
+          <a href="#close" aria-label="Close" class="close"></a>
+          <h2>Add a New Subject</h2>
+        </header>
+        <form id="add-subject-form">
+          <label for="subjectName">Subject Name</label>
+          <input
+            type="text"
+            id="subjectName"
+            name="subjectName"
+            placeholder="e.g., Data Structures"
+            required
+          />
+
+          <label for="totalClasses">Total Classes So Far</label>
+          <input
+            type="number"
+            id="totalClasses"
+            name="totalClasses"
+            placeholder="e.g., 20"
+            required
+          />
+
+          <label for="attendedClasses">Classes Attended So Far</label>
+          <input
+            type="number"
+            id="attendedClasses"
+            name="attendedClasses"
+            placeholder="e.g., 18"
+            required
+          />
+
+          <label for="minAttendance">Minimum Attendance (%)</label>
+          <input
+            type="number"
+            id="minAttendance"
+            name="minAttendance"
+            value="75"
+            required
+          />
+
+          <footer>
+            <button type="submit">Save Subject</button>
+          </footer>
+        </form>
+      </article>
+    </dialog>
 
     <script src="script.js"></script>
   </body>
