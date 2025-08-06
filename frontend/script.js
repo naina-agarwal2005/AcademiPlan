@@ -109,10 +109,14 @@ document.addEventListener("DOMContentLoaded", () => {
     link.addEventListener("click", (e) => {
       e.preventDefault();
       const pageId = link.dataset.page;
+
       pages.forEach((page) => page.classList.remove("active"));
       navLinks.forEach((nav) => nav.classList.remove("active"));
+
+      // This line finds the div with the matching ID (e.g., "dashboard-page")
       document.getElementById(`${pageId}-page`).classList.add("active");
       link.classList.add("active");
+
       if (pageId === "history") {
         fetchHistory();
       }

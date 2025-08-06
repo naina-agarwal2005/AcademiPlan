@@ -70,3 +70,13 @@ button.bunked-btn {
   --pico-background-color: #dc3545; /* Red */
   --pico-border-color: #dc3545;
 }
+
+/* --- Page/Tab Navigation Styles --- */
+
+.page {
+  display: none; /* This hides all page containers by default */
+}
+
+.page.active {
+  display: block; /* This shows only the one page that has the 'active' class */
+}
