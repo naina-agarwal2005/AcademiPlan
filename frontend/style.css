@@ -1,36 +1,81 @@
-/* Main Dashboard Layout */
+/* === AcademiPlan: Final Stylesheet === */
+
+/* --- 1. Global & Layout Styles --- */
+:root {
+  --card-bg-color: #242831; /* A slightly lighter dark color for cards */
+  --border-color: #404652;
+}
+
+body {
+  background-color: #1a1d24; /* Main dark background */
+}
+
+header.container > nav {
+  margin-bottom: 2rem;
+}
+
+main.container {
+  padding-top: 0;
+}
+
+/* --- 2. Authentication Page Styles --- */
+#login-page article,
+#register-page article {
+  max-width: 450px;
+  margin: 2rem auto;
+  border: 1px solid var(--border-color);
+}
+
+.message {
+  text-align: center;
+  margin-top: 1rem;
+  min-height: 1.5em;
+}
+
+/* --- 3. Page & Tab Navigation --- */
+.page,
+.sub-page {
+  display: none;
+}
+.page.active,
+.sub-page.active {
+  display: block;
+}
+
+/* --- 4. Dashboard & Subject Card Styles --- */
 #subjects-container {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1rem;
-  margin-top: 2rem;
+  gap: 1.5rem;
 }
 
-/* Individual Subject Card Styling */
 .subject-card {
-  border: 1px solid var(--card-border-color, #e1e1e1);
-  border-radius: var(--card-border-radius, 8px);
+  background-color: var(--card-bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--card-border-radius);
   padding: 1.5rem;
-  box-shadow: var(--card-box-shadow, 0 2px 4px rgba(0, 0, 0, 0.05));
+  display: flex;
+  flex-direction: column;
 }
 
 .subject-card h3 {
   margin-top: 0;
+  margin-bottom: 1.5rem;
 }
 
 .attendance-bar {
   width: 100%;
-  height: 10px;
-  background-color: #e9ecef;
-  border-radius: 5px;
+  height: 8px;
+  background-color: #333740;
+  border-radius: 4px;
   overflow: hidden;
   margin: 0.5rem 0;
 }
 
 .attendance-progress {
   height: 100%;
-  background-color: var(--primary);
-  border-radius: 5px;
+  border-radius: 4px;
+  transition: width 0.3s ease-in-out;
 }
 
 .attendance-stats {
@@ -40,18 +85,12 @@
   color: var(--muted-color);
 }
 
-/* Modal Styling */
-dialog::backdrop {
-  background: rgba(0, 0, 0, 0.5);
-}
-
-/* Add these new styles to the end of your style.css file */
-
 .card-actions {
-  margin-top: 1rem;
+  margin-top: auto; /* Pushes buttons to the bottom of the card */
+  padding-top: 1rem;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.5rem;
+  gap: 0.75rem;
 }
 
 .card-actions button {
@@ -60,23 +99,35 @@ dialog::backdrop {
   margin: 0;
 }
 
-/* Optional: Different colors for the buttons */
+/* Button colors are now part of Pico, but we can be explicit */
 button.attended-btn {
-  --pico-background-color: #28a745; /* Green */
-  --pico-border-color: #28a745;
+  background-color: #28a745;
+  border-color: #28a745;
 }
-
 button.bunked-btn {
-  --pico-background-color: #dc3545; /* Red */
-  --pico-border-color: #dc3545;
+  background-color: #dc3545;
+  border-color: #dc3545;
 }
 
-/* --- Page/Tab Navigation Styles --- */
-
-.page {
-  display: none; /* This hides all page containers by default */
+/* --- 5. History Page Styles --- */
+#history-page article {
+  background-color: var(--card-bg-color);
+  border: 1px solid var(--border-color);
 }
 
-.page.active {
-  display: block; /* This shows only the one page that has the 'active' class */
+.history-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.history-item:last-child {
+  border-bottom: none;
+}
+
+.history-item p,
+.history-item small {
+  margin: 0;
 }

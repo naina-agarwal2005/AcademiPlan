@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
-    <title>AcademiPlan - Your Academic Dashboard</title>
+    <title>AcademiPlan</title>
     <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"
@@ -10,34 +10,100 @@
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <main class="container">
+    <!-- Main Header -->
+    <header class="container">
       <nav>
         <ul>
           <li><strong>AcademiPlan</strong></li>
         </ul>
-        <ul>
-          <li><button id="add-subject-btn">Add New Subject</button></li>
-        </ul>
-      </nav>
-
-      <nav>
-        <ul>
+        <!-- Nav for logged OUT users -->
+        <ul id="auth-nav">
+          <li><a href="#" class="nav-auth" data-page="login">Login</a></li>
           <li>
-            <a href="#" class="nav-link active" data-page="dashboard"
-              >Dashboard</a
+            <a href="#" class="nav-auth" data-page="register" role="button"
+              >Register</a
             >
           </li>
-          <li><a href="#" class="nav-link" data-page="history">History</a></li>
+        </ul>
+        <!-- Nav for logged IN users (hidden by default) -->
+        <ul id="main-nav" style="display: none">
+          <li><button id="add-subject-btn">Add New Subject</button></li>
+          <li>
+            <a href="#" id="logout-btn" role="button" class="secondary"
+              >Logout</a
+            >
+          </li>
         </ul>
       </nav>
+    </header>
 
-      <div id="dashboard-page" class="page active">
-        <div id="subjects-container"></div>
+    <!-- Main Content Area -->
+    <main class="container">
+      <!-- Registration Page -->
+      <div id="register-page" class="page">
+        <article>
+          <h2>Create an Account</h2>
+          <form id="register-form">
+            <label for="reg-username">Username</label>
+            <input type="text" id="reg-username" name="username" required />
+            <label for="reg-password">Password</label>
+            <input type="password" id="reg-password" name="password" required />
+            <button type="submit">Register</button>
+            <div
+              id="register-message"
+              class="message"
+              style="text-align: center; margin-top: 1rem"
+            ></div>
+          </form>
+        </article>
       </div>
 
-      <div id="history-page" class="page"></div>
+      <!-- Login Page -->
+      <div id="login-page" class="page" style="display: none">
+        <article>
+          <h2>Login to Your Account</h2>
+          <form id="login-form">
+            <label for="login-username">Username</label>
+            <input type="text" id="login-username" name="username" required />
+            <label for="login-password">Password</label>
+            <input
+              type="password"
+              id="login-password"
+              name="password"
+              required
+            />
+            <button type="submit">Login</button>
+            <div
+              id="login-message"
+              class="message"
+              style="text-align: center; margin-top: 1rem"
+            ></div>
+          </form>
+        </article>
+      </div>
+
+      <!-- Dashboard Page (hidden by default) -->
+      <div id="dashboard-page" class="page" style="display: none">
+        <nav>
+          <ul>
+            <li>
+              <a href="#" class="nav-link active" data-page="dashboard-content"
+                >Dashboard</a
+              >
+            </li>
+            <li>
+              <a href="#" class="nav-link" data-page="history">History</a>
+            </li>
+          </ul>
+        </nav>
+        <div id="dashboard-content-page" class="sub-page active">
+          <div id="subjects-container"></div>
+        </div>
+        <div id="history-page" class="sub-page"></div>
+      </div>
     </main>
 
+    <!-- Modal for Adding a Subject -->
     <dialog id="add-subject-modal">
       <article>
         <header>
@@ -46,32 +112,16 @@
         </header>
         <form id="add-subject-form">
           <label for="subjectName">Subject Name</label>
-          <input
-            type="text"
-            id="subjectName"
-            name="subjectName"
-            placeholder="e.g., Data Structures"
-            required
-          />
-
+          <input type="text" id="subjectName" name="subjectName" required />
           <label for="totalClasses">Total Classes So Far</label>
-          <input
-            type="number"
-            id="totalClasses"
-            name="totalClasses"
-            placeholder="e.g., 20"
-            required
-          />
-
+          <input type="number" id="totalClasses" name="totalClasses" required />
           <label for="attendedClasses">Classes Attended So Far</label>
           <input
             type="number"
             id="attendedClasses"
             name="attendedClasses"
-            placeholder="e.g., 18"
             required
           />
-
           <label for="minAttendance">Minimum Attendance (%)</label>
           <input
             type="number"
@@ -80,7 +130,6 @@
             value="75"
             required
           />
-
           <footer>
             <button type="submit">Save Subject</button>
           </footer>
