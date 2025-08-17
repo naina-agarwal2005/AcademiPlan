@@ -99,6 +99,14 @@ main.container {
   margin: 0;
 }
 
+/* Add some space below the dashboard header */
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem; /* This adds the gap */
+}
+
 /* Button colors are now part of Pico, but we can be explicit */
 button.attended-btn {
   background-color: #28a745;
@@ -162,4 +170,19 @@ button.bunked-btn {
 .task-item {
   padding: 0.5rem 0;
   border-bottom: 1px solid var(--border-color);
+}
+
+/* --- Style for the Empty Dashboard State --- */
+.empty-state {
+  /* This tells the article to span all columns of our grid layout */
+  grid-column: 1 / -1;
+  text-align: center; /* A nice touch to center the text */
+}
+/* Left-align the instruction list on the empty dashboard */
+.empty-state ul {
+  text-align: left;
+
+  /* This is an optional touch to make it look even cleaner */
+  display: inline-block;
+  margin-top: 1rem;
 }

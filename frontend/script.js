@@ -79,8 +79,20 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       subjectsContainer.innerHTML = "";
       if (subjects.length === 0) {
-        subjectsContainer.innerHTML =
-          "<article><p>No subjects yet. Add one to get started!</p></article>";
+        subjectsContainer.innerHTML = `
+        <article class="empty-state">
+            <h3>Welcome to Your AcademiPlan Dashboard!</h3>
+            <p>This is where you'll see a real-time overview of your attendance for all your subjects.</p>
+            <footer>
+                <p><strong>How it works:</strong></p>
+                <ul>
+                    <li><strong>Track Everything:</strong> Click the "Add New Subject" button in the header to start tracking your classes.</li>
+                    <li><strong>Get Smart Advice:</strong> Each subject card will calculate your attendance and give you smart recommendations.</li>
+                    <li><strong>View Your Progress:</strong> Every time you mark attendance, a permanent record is saved to your personal <strong>History</strong> page.</li>
+                </ul>
+            </footer>
+        </article>
+    `;
       } else {
         subjects.forEach((subject) => {
           const card = document.createElement("article");
@@ -230,6 +242,7 @@ document.addEventListener("DOMContentLoaded", () => {
         center: "title",
         right: "dayGridMonth,timeGridWeek,timeGridDay",
       },
+      height: "auto",
       selectable: true,
       editable: true,
       dateClick: (info) => {
