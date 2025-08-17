@@ -1,6 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // --- Get references to all elements ---
-
+  // === 1. GET ALL ELEMENT REFERENCES ===
   const allPages = document.querySelectorAll(".page");
   const authNav = document.getElementById("auth-nav");
   const mainNav = document.getElementById("main-nav");
@@ -9,15 +8,27 @@ document.addEventListener("DOMContentLoaded", () => {
   const logoutBtn = document.getElementById("logout-btn");
   const subjectsContainer = document.getElementById("subjects-container");
   const addSubjectBtn = document.getElementById("add-subject-btn");
-  const modal = document.getElementById("add-subject-modal");
+  const subjectModal = document.getElementById("add-subject-modal");
   const addSubjectForm = document.getElementById("add-subject-form");
-  const dashboardNavLinks = document.querySelectorAll(
-    "#dashboard-page .nav-link"
+  const mainDashboardNavLinks = document.querySelectorAll(
+    "#main-nav .nav-link"
   );
-  const historyPageContainer = document.getElementById("history-page");
+  const historyPageContainer = document.getElementById(
+    "history-list-container"
+  );
+  const plannerPageContainer = document.getElementById("calendar");
+  const welcomePage = document.getElementById("welcome-page");
+  const welcomeUsername = document.getElementById("welcome-username");
+  const welcomeNavButtons = document.querySelectorAll(".welcome-nav-btn");
+  const eventModal = document.getElementById("add-event-modal");
+  const eventForm = document.getElementById("add-event-form");
+  const eventStartDateInput = document.getElementById("eventStartDate");
+  const brandLink = document.querySelector(".brand");
+  let calendar;
 
-  // --- Helper functions ---
+  // === 2. HELPER FUNCTIONS ===
   const getToken = () => localStorage.getItem("token");
+  const getUsername = () => localStorage.getItem("username");
   const showMessage = (page, msg, isError = false) => {
     const messageContainer = document.getElementById(`${page}-message`);
     if (messageContainer) {
@@ -28,7 +39,31 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  // --- API & Core Functions (SECURED) ---
+  // === 3. VIEW MANAGEMENT ===
+  const showPage = (pageId) => {
+    allPages.forEach((p) => {
+      p.style.display = "none";
+    });
+    const pageToShow = document.getElementById(pageId);
+    if (pageToShow) pageToShow.style.display = "block";
+  };
+
+  const updateView = () => {
+    const token = getToken();
+    const username = getUsername();
+    if (token && username) {
+      authNav.style.display = "none";
+      mainNav.style.display = "none";
+      welcomeUsername.textContent = `Welcome, ${username}!`;
+      showPage("welcome-page");
+    } else {
+      authNav.style.display = "flex";
+      mainNav.style.display = "none";
+      showPage("login-page");
+    }
+  };
+
+  // === 4. API & CORE FUNCTIONS (SECURED) ===
   const fetchAndDisplaySubjects = async () => {
     const token = getToken();
     if (!token) return;
@@ -37,7 +72,11 @@ document.addEventListener("DOMContentLoaded", () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       const subjects = await response.json();
-      if (subjects.error) throw new Error(subjects.error);
+      if (subjects.message) {
+        // Handle token errors from backend
+        handleLogout();
+        return;
+      }
       subjectsContainer.innerHTML = "";
       if (subjects.length === 0) {
         subjectsContainer.innerHTML =
@@ -82,7 +121,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
       if (response.ok) {
         addSubjectForm.reset();
-        modal.close();
+        subjectModal.close();
         fetchAndDisplaySubjects();
       } else {
         alert("Failed to add subject.");
@@ -120,31 +159,157 @@ document.addEventListener("DOMContentLoaded", () => {
     const token = getToken();
     if (!token) return;
     historyPageContainer.innerHTML =
-      "<h2>Your Recent Activity</h2><p>Loading history...</p>";
+      "<article><p>Loading history...</p></article>";
     try {
       const response = await fetch("http://127.0.0.1:5000/api/history", {
         headers: { Authorization: `Bearer ${token}` },
       });
       const historyLog = await response.json();
-      if (historyLog.error) throw new Error(historyLog.error);
-      if (historyLog.length === 0) {
-        historyPageContainer.innerHTML =
-          "<h2>Your Recent Activity</h2><p>No history yet.</p>";
+      if (historyLog.message) {
+        handleLogout();
         return;
       }
-      let historyHTML = "<h2>Your Recent Activity</h2><article>";
+      if (historyLog.length === 0) {
+        historyPageContainer.innerHTML =
+          "<article><p>No history yet.</p></article>";
+        return;
+      }
+      let historyHTML = "<article>";
       historyLog.forEach((record) => {
         const statusText =
           record.status === "attended" ? "✅ Attended" : "❌ Bunked";
         const date = new Date(record.timestamp.replace(" ", "T") + "Z");
-        historyHTML += `<div class="history-item"><p style="margin:0;"><strong>${
+        historyHTML += `<div class="history-item"><div><p style="margin:0;"><strong>${
           record.subjectName || "Unknown"
-        }</strong>: Marked as ${statusText}</p><small>${date.toLocaleString()}</small></div>`;
+        }</strong>: Marked as ${statusText}</p><small>${date.toLocaleString()}</small></div><button class="secondary outline delete-history-btn" data-record-id="${
+          record._id
+        }">Delete</button></div>`;
       });
       historyHTML += "</article>";
       historyPageContainer.innerHTML = historyHTML;
+      document
+        .querySelectorAll(".delete-history-btn")
+        .forEach((button) =>
+          button.addEventListener("click", handleHistoryDelete)
+        );
     } catch (error) {
       historyPageContainer.innerHTML = `<p style="color: red;">Could not fetch history.</p>`;
+    }
+  };
+  const handleHistoryDelete = async (event) => {
+    const button = event.target.closest("button");
+    const recordId = button.dataset.recordId;
+    if (
+      !window.confirm("Are you sure? This will update your attendance counts.")
+    )
+      return;
+    const token = getToken();
+    if (!token) return;
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:5000/api/history/${recordId}`,
+        { method: "DELETE", headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (response.ok) {
+        fetchHistory();
+      } else {
+        alert("Failed to delete the record.");
+      }
+    } catch (error) {
+      alert("Error connecting to the server.");
+    }
+  };
+  const initializeCalendar = () => {
+    if (!plannerPageContainer) return;
+    plannerPageContainer.innerHTML = "";
+    const token = getToken();
+    calendar = new FullCalendar.Calendar(plannerPageContainer, {
+      initialView: "timeGridWeek",
+      headerToolbar: {
+        left: "prev,next today",
+        center: "title",
+        right: "dayGridMonth,timeGridWeek,timeGridDay",
+      },
+      selectable: true,
+      editable: true,
+      dateClick: (info) => {
+        eventForm.reset();
+        const date = new Date(info.dateStr);
+        const startTime = date.toTimeString().substring(0, 5);
+        eventStartDateInput.value = date.toISOString().substring(0, 10);
+        document.getElementById("eventStartTime").value = startTime;
+        document.getElementById("eventEndTime").value = startTime;
+        eventModal.showModal();
+      },
+      eventClick: (info) => {
+        if (window.confirm(`Delete event: '${info.event.title}'?`)) {
+          handleEventDelete(info);
+        }
+      },
+      events: (info, successCallback, failureCallback) => {
+        fetch("http://127.0.0.1:5000/api/events", {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+          .then((res) => res.json())
+          .then((data) =>
+            successCallback(data.map((e) => ({ ...e, id: e._id })))
+          )
+          .catch((err) => failureCallback(err));
+      },
+    });
+    calendar.render();
+  };
+  const handleAddEvent = async (event) => {
+    event.preventDefault();
+    const token = getToken();
+    if (!token) return;
+    const title = document.getElementById("eventTitle").value;
+    const date = eventStartDateInput.value;
+    const startTime = document.getElementById("eventStartTime").value;
+    const endTime = document.getElementById("eventEndTime").value;
+    const startDateTime = `${date}T${startTime}:00`;
+    const endDateTime = `${date}T${endTime}:00`;
+    try {
+      const response = await fetch("http://127.0.0.1:5000/api/events", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          title,
+          start: startDateTime,
+          end: endDateTime,
+          allDay: false,
+        }),
+      });
+      if (response.ok) {
+        eventForm.reset();
+        eventModal.close();
+        calendar.refetchEvents();
+      } else {
+        alert("Failed to save event.");
+      }
+    } catch (error) {
+      alert("Error connecting to server.");
+    }
+  };
+  const handleEventDelete = async (info) => {
+    const token = getToken();
+    const eventId = info.event.id;
+    if (!token || !eventId) return;
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:5000/api/events/${eventId}`,
+        { method: "DELETE", headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (response.ok) {
+        info.event.remove();
+      } else {
+        alert("Failed to delete event.");
+      }
+    } catch (error) {
+      alert("Error connecting to server.");
     }
   };
 
@@ -175,7 +340,6 @@ document.addEventListener("DOMContentLoaded", () => {
       showMessage("register", "Could not connect to the server.", true);
     }
   };
-
   const handleLogin = async (event) => {
     event.preventDefault();
     showMessage("login", "Logging in...", false);
@@ -190,6 +354,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await response.json();
       if (response.ok) {
         localStorage.setItem("token", data.token);
+        localStorage.setItem("username", data.username);
         updateView();
       } else {
         showMessage("login", `Error: ${data.error}`, true);
@@ -198,69 +363,78 @@ document.addEventListener("DOMContentLoaded", () => {
       showMessage("login", "Could not connect to the server.", true);
     }
   };
-
   const handleLogout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("username");
     updateView();
   };
 
-  // --- View Management ---
-  const showPage = (pageId) => {
-    allPages.forEach((p) => {
-      p.style.display = "none";
-    });
-    const pageToShow = document.getElementById(pageId);
-    if (pageToShow) pageToShow.style.display = "block";
-  };
-  const updateView = () => {
-    const token = getToken();
-    showMessage("login", "");
-    showMessage("register", "");
-    if (token) {
-      authNav.style.display = "none";
-      mainNav.style.display = "flex";
-      showPage("dashboard-page");
-      fetchAndDisplaySubjects();
-    } else {
-      authNav.style.display = "flex";
-      mainNav.style.display = "none";
-      showPage("login-page");
-    }
-  };
-
-  // --- Attaching Event Listeners ---
+  // === 6. ATTACHING EVENT LISTENERS ===
   if (registerForm) registerForm.addEventListener("submit", handleRegistration);
   if (loginForm) loginForm.addEventListener("submit", handleLogin);
   if (logoutBtn) logoutBtn.addEventListener("click", handleLogout);
   if (addSubjectForm)
     addSubjectForm.addEventListener("submit", handleAddSubject);
+  if (eventForm) eventForm.addEventListener("submit", handleAddEvent);
 
   authNav.addEventListener("click", (e) => {
     if (e.target.tagName === "A") {
       e.preventDefault();
-      showPage(`${e.target.dataset.page}-page`);
+      showPage(`${e.target.dataset.page}`);
     }
   });
 
-  dashboardNavLinks.forEach((link) => {
+  mainDashboardNavLinks.forEach((link) => {
     link.addEventListener("click", (e) => {
       e.preventDefault();
-      const subPageId = e.currentTarget.dataset.page;
-      document
-        .querySelectorAll("#dashboard-page .sub-page")
-        .forEach((sp) => sp.classList.remove("active"));
-      document.getElementById(`${subPageId}-page`).classList.add("active");
-      dashboardNavLinks.forEach((nav) => nav.classList.remove("active"));
+      mainNav.style.display = "flex";
+      const pageId = e.currentTarget.dataset.page;
+      showPage(pageId);
+      mainDashboardNavLinks.forEach((l) => l.classList.remove("active"));
       e.currentTarget.classList.add("active");
-      if (subPageId === "history") fetchHistory();
+      if (pageId === "dashboard-page") fetchAndDisplaySubjects();
+      if (pageId === "history-page") fetchHistory();
+      if (pageId === "planner-page") initializeCalendar();
     });
   });
 
-  addSubjectBtn.addEventListener("click", () => modal.showModal());
-  modal.addEventListener("click", (event) => {
-    if (event.target === modal || event.target.classList.contains("close"))
-      modal.close();
+  welcomeNavButtons.forEach((button) => {
+    button.addEventListener("click", (e) => {
+      const pageId = e.currentTarget.dataset.page;
+      mainNav.style.display = "flex";
+      showPage(pageId);
+      mainDashboardNavLinks.forEach((link) => {
+        if (link.dataset.page === pageId) {
+          link.classList.add("active");
+          if (pageId === "dashboard-page") fetchAndDisplaySubjects();
+          if (pageId === "history-page") fetchHistory();
+          if (pageId === "planner-page") initializeCalendar();
+        } else {
+          link.classList.remove("active");
+        }
+      });
+    });
   });
+
+  addSubjectBtn.addEventListener("click", () => subjectModal.showModal());
+  subjectModal.addEventListener("click", (event) => {
+    if (
+      event.target === subjectModal ||
+      event.target.classList.contains("close")
+    )
+      subjectModal.close();
+  });
+  eventModal.addEventListener("click", (event) => {
+    if (event.target === eventModal || event.target.classList.contains("close"))
+      eventModal.close();
+  });
+
+  if (brandLink) {
+    brandLink.addEventListener("click", (e) => {
+      e.preventDefault();
+      if (getToken()) showPage("welcome-page");
+    });
+  }
 
   // --- Initial Load ---
   updateView();

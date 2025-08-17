@@ -8,26 +8,38 @@
       href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"
     />
     <link rel="stylesheet" href="style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
   </head>
   <body>
-    <!-- Main Header -->
     <header class="container">
       <nav>
         <ul>
-          <li><strong>AcademiPlan</strong></li>
-        </ul>
-        <!-- Nav for logged OUT users -->
-        <ul id="auth-nav">
-          <li><a href="#" class="nav-auth" data-page="login">Login</a></li>
           <li>
-            <a href="#" class="nav-auth" data-page="register" role="button"
+            <a href="#" data-page="welcome-page" class="brand"
+              ><strong>AcademiPlan</strong></a
+            >
+          </li>
+        </ul>
+        <ul id="auth-nav">
+          <li><a href="#" class="nav-auth" data-page="login-page">Login</a></li>
+          <li>
+            <a href="#" class="nav-auth" data-page="register-page" role="button"
               >Register</a
             >
           </li>
         </ul>
-        <!-- Nav for logged IN users (hidden by default) -->
         <ul id="main-nav" style="display: none">
-          <li><button id="add-subject-btn">Add New Subject</button></li>
+          <li>
+            <a href="#" class="nav-link" data-page="dashboard-page"
+              >Dashboard</a
+            >
+          </li>
+          <li>
+            <a href="#" class="nav-link" data-page="history-page">History</a>
+          </li>
+          <li>
+            <a href="#" class="nav-link" data-page="planner-page">Planner</a>
+          </li>
           <li>
             <a href="#" id="logout-btn" role="button" class="secondary"
               >Logout</a
@@ -37,73 +49,81 @@
       </nav>
     </header>
 
-    <!-- Main Content Area -->
     <main class="container">
-      <!-- Registration Page -->
       <div id="register-page" class="page">
         <article>
           <h2>Create an Account</h2>
           <form id="register-form">
-            <label for="reg-username">Username</label>
-            <input type="text" id="reg-username" name="username" required />
-            <label for="reg-password">Password</label>
-            <input type="password" id="reg-password" name="password" required />
-            <button type="submit">Register</button>
-            <div
-              id="register-message"
-              class="message"
-              style="text-align: center; margin-top: 1rem"
-            ></div>
+            <label for="reg-username">Username</label
+            ><input
+              type="text"
+              id="reg-username"
+              name="username"
+              required
+            /><label for="reg-password">Password</label
+            ><input
+              type="password"
+              id="reg-password"
+              name="password"
+              required
+            /><button type="submit">Register</button>
+            <div id="register-message" class="message"></div>
           </form>
         </article>
       </div>
-
-      <!-- Login Page -->
       <div id="login-page" class="page" style="display: none">
         <article>
           <h2>Login to Your Account</h2>
           <form id="login-form">
-            <label for="login-username">Username</label>
-            <input type="text" id="login-username" name="username" required />
-            <label for="login-password">Password</label>
-            <input
+            <label for="login-username">Username</label
+            ><input
+              type="text"
+              id="login-username"
+              name="username"
+              required
+            /><label for="login-password">Password</label
+            ><input
               type="password"
               id="login-password"
               name="password"
               required
-            />
-            <button type="submit">Login</button>
-            <div
-              id="login-message"
-              class="message"
-              style="text-align: center; margin-top: 1rem"
-            ></div>
+            /><button type="submit">Login</button>
+            <div id="login-message" class="message"></div>
           </form>
         </article>
       </div>
-
-      <!-- Dashboard Page (hidden by default) -->
+      <div id="welcome-page" class="page" style="display: none">
+        <article>
+          <h2 id="welcome-username"></h2>
+          <h3>What would you like to do today?</h3>
+          <div class="grid">
+            <button class="welcome-nav-btn" data-page="dashboard-page">
+              📊 Dashboard
+            </button>
+            <button class="welcome-nav-btn" data-page="history-page">
+              📜 History
+            </button>
+            <button class="welcome-nav-btn" data-page="planner-page">
+              📅 Planner
+            </button>
+          </div>
+        </article>
+      </div>
       <div id="dashboard-page" class="page" style="display: none">
-        <nav>
-          <ul>
-            <li>
-              <a href="#" class="nav-link active" data-page="dashboard-content"
-                >Dashboard</a
-              >
-            </li>
-            <li>
-              <a href="#" class="nav-link" data-page="history">History</a>
-            </li>
-          </ul>
-        </nav>
-        <div id="dashboard-content-page" class="sub-page active">
-          <div id="subjects-container"></div>
-        </div>
-        <div id="history-page" class="sub-page"></div>
+        <header class="dashboard-header">
+          <button id="add-subject-btn">Add New Subject</button>
+        </header>
+        <div id="subjects-container"></div>
+      </div>
+      <div id="history-page" class="page" style="display: none">
+        <h2>Your Recent Activity</h2>
+        <div id="history-list-container"></div>
+      </div>
+      <div id="planner-page" class="page" style="display: none">
+        <div id="calendar"></div>
       </div>
     </main>
 
-    <!-- Modal for Adding a Subject -->
     <dialog id="add-subject-modal">
       <article>
         <header>
@@ -111,28 +131,60 @@
           <h2>Add a New Subject</h2>
         </header>
         <form id="add-subject-form">
-          <label for="subjectName">Subject Name</label>
-          <input type="text" id="subjectName" name="subjectName" required />
-          <label for="totalClasses">Total Classes So Far</label>
-          <input type="number" id="totalClasses" name="totalClasses" required />
-          <label for="attendedClasses">Classes Attended So Far</label>
-          <input
+          <label for="subjectName">Subject Name</label
+          ><input type="text" id="subjectName" name="subjectName" required />
+          <label for="totalClasses">Total Classes</label
+          ><input
+            type="number"
+            id="totalClasses"
+            name="totalClasses"
+            required
+          />
+          <label for="attendedClasses">Classes Attended</label
+          ><input
             type="number"
             id="attendedClasses"
             name="attendedClasses"
             required
           />
-          <label for="minAttendance">Minimum Attendance (%)</label>
-          <input
+          <label for="minAttendance">Minimum %</label
+          ><input
             type="number"
             id="minAttendance"
             name="minAttendance"
             value="75"
             required
           />
-          <footer>
-            <button type="submit">Save Subject</button>
-          </footer>
+          <footer><button type="submit">Save Subject</button></footer>
+        </form>
+      </article>
+    </dialog>
+    <dialog id="add-event-modal">
+      <article>
+        <header>
+          <a href="#close" aria-label="Close" class="close"></a>
+          <h2>Add New Event</h2>
+        </header>
+        <form id="add-event-form">
+          <label for="eventTitle">Event Title</label
+          ><input type="text" id="eventTitle" name="title" required />
+          <div class="grid">
+            <div>
+              <label for="eventStartTime">Start Time</label
+              ><input
+                type="time"
+                id="eventStartTime"
+                name="startTime"
+                required
+              />
+            </div>
+            <div>
+              <label for="eventEndTime">End Time</label
+              ><input type="time" id="eventEndTime" name="endTime" required />
+            </div>
+          </div>
+          <input type="hidden" id="eventStartDate" name="start" />
+          <footer><button type="submit">Save Event</button></footer>
         </form>
       </article>
     </dialog>
