@@ -8,7 +8,7 @@ from pymongo import MongoClient
 from bson.objectid import ObjectId
 import math
 
-# --- Database & App Setup ---
+# Database & App Setup 
 MONGO_URI = "mongodb://localhost:27017/"
 client = MongoClient(MONGO_URI)
 db = client.academiplan_db
@@ -21,7 +21,7 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'a-very-secret-and-unguessable-key-123'
 CORS(app)
 
-# --- Security Decorator ---
+# Security Decorator 
 def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -38,7 +38,7 @@ def token_required(f):
         return f(current_user, *args, **kwargs)
     return decorated
 
-# --- Auth Endpoints ---
+# Auth Endpoints 
 @app.route('/api/register', methods=['POST'])
 def register():
     try:
@@ -70,7 +70,7 @@ def login():
         print(f"--- ERROR IN login ---: {e}")
         return jsonify({"error": "An internal server error occurred"}), 500
 
-# --- Subject & Attendance Endpoints ---
+# Subject & Attendance Endpoints 
 @app.route('/api/subjects', methods=['POST'])
 @token_required
 def add_subject(current_user):
@@ -83,30 +83,79 @@ def add_subject(current_user):
         print(f"--- ERROR IN add_subject ---: {e}")
         return jsonify({"error": "An internal server error occurred"}), 500
 
+
 @app.route('/api/subjects', methods=['GET'])
 @token_required
 def get_subjects(current_user):
     try:
         subjects = list(subjects_collection.find({'userId': current_user['_id']}).sort("createdAt", 1))
         for subject in subjects:
-            subject["_id"] = str(subject["_id"]); subject["userId"] = str(subject["userId"])
-            total = subject.get("totalClasses", 0); attended = subject.get("attendedClasses", 0); min_att = subject.get("minAttendance", 75)
-            bunks_possible = 0; recommendation = ""; current_attendance = 100
+            subject["_id"] = str(subject["_id"])
+            subject["userId"] = str(subject["userId"])
+
+            total = subject.get("totalClasses", 0)
+            attended = subject.get("attendedClasses", 0)
+            min_att = subject.get("minAttendance", 75)
+
+            bunks_possible = 0
+            recommendation = ""
+            current_attendance = 100
+
             if total > 0:
                 current_attendance = (attended / total) * 100
-                bunks_possible = attended - (total * min_att / 100)
+                min_classes_required = (total * min_att) / 100
+                surplus_classes = attended - min_classes_required
+                bunks_possible = math.floor(surplus_classes) if surplus_classes > 0 else 0
                 if current_attendance < min_att:
-                    numerator = (min_att * total) - (100 * attended); denominator = 100 - min_att
+                    numerator = (min_att * total) - (100 * attended)
+                    denominator = 100 - min_att
                     classes_to_attend = math.ceil(numerator / denominator) if denominator > 0 else 0
                     recommendation = f"Shortfall! Must attend the next {classes_to_attend} classes."
                 else:
-                    recommendation = "You have a healthy attendance."
+                    if bunks_possible > 2:
+                        recommendation = "You have a healthy attendance buffer."
+                    elif bunks_possible > 0:
+                        recommendation = "You're safe, but your buffer is small. Bunk wisely."
+                    else: # Bunks possible is 0, but attendance is still >= minimum
+                        recommendation = "You are at the minimum. Do not bunk any more classes."
+
             subject["currentAttendance"] = round(current_attendance, 2)
-            subject["bunksPossible"] = int(bunks_possible) if bunks_possible > 0 else 0
+            subject["bunksPossible"] = bunks_possible 
             subject["recommendation"] = recommendation
+
         return jsonify(subjects)
     except Exception as e:
         print(f"--- ERROR IN get_subjects ---: {e}")
+        return jsonify({"error": "An internal server error occurred"}), 500
+    
+# Add this new function to app.py to handle deleting a subject
+
+@app.route('/api/subjects/<subject_id>', methods=['DELETE'])
+@token_required
+def delete_subject(current_user, subject_id):
+    """
+    Endpoint to delete a single subject and all its related attendance records.
+    """
+    try:
+        subject_oid = ObjectId(subject_id)
+
+        # First, ensure the subject belongs to the current user before deleting
+        subject_to_delete = subjects_collection.find_one(
+            {'_id': subject_oid, 'userId': current_user['_id']}
+        )
+        if not subject_to_delete:
+            return jsonify({"error": "Subject not found or permission denied"}), 404
+
+        # Step 1: Delete all attendance records linked to this subject
+        attendance_records_collection.delete_many({'subjectId': subject_oid, 'userId': current_user['_id']})
+
+        # Step 2: Delete the subject document itself
+        subjects_collection.delete_one({'_id': subject_oid})
+        
+        return jsonify({"message": "Subject and all related history deleted successfully"}), 200
+
+    except Exception as e:
+        print(f"--- ERROR IN delete_subject ---: {e}")
         return jsonify({"error": "An internal server error occurred"}), 500
 
 @app.route('/api/attendance', methods=['POST'])
@@ -125,7 +174,7 @@ def update_attendance(current_user):
         print(f"--- ERROR IN update_attendance ---: {e}")
         return jsonify({"error": "An internal server error occurred"}), 500
 
-# --- History Endpoints ---
+# History Endpoints 
 @app.route('/api/history', methods=['GET'])
 @token_required
 def get_history(current_user):
@@ -157,7 +206,7 @@ def delete_history_record(current_user, record_id):
         print(f"--- ERROR IN delete_history_record ---: {e}")
         return jsonify({"error": "An internal server error occurred"}), 500
 
-# --- Planner / Event Endpoints ---
+# Planner / Event Endpoints 
 @app.route('/api/events', methods=['POST'])
 @token_required
 def add_event(current_user):
@@ -193,6 +242,6 @@ def delete_event(current_user, event_id):
         print(f"--- ERROR IN delete_event ---: {e}")
         return jsonify({"error": "An internal server error occurred"}), 500
 
-# --- Main Execution Block ---
+# Main Execution Block 
 if __name__ == '__main__':
     app.run(debug=True)

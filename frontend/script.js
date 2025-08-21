@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // === 1. GET ALL ELEMENT REFERENCES ===
+  //GET ALL ELEMENT REFERENCES
   const allPages = document.querySelectorAll(".page");
   const authNav = document.getElementById("auth-nav");
   const mainNav = document.getElementById("main-nav");
@@ -26,7 +26,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const brandLink = document.querySelector(".brand");
   let calendar;
 
-  // === 2. HELPER FUNCTIONS ===
+  // HELPER FUNCTIONS
   const getToken = () => localStorage.getItem("token");
   const getUsername = () => localStorage.getItem("username");
   const showMessage = (page, msg, isError = false) => {
@@ -39,7 +39,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  // === 3. VIEW MANAGEMENT ===
+  // VIEW MANAGEMENT
   const showPage = (pageId) => {
     allPages.forEach((p) => {
       p.style.display = "none";
@@ -63,7 +63,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  // === 4. API & CORE FUNCTIONS (SECURED) ===
+  // API & CORE FUNCTIONS (SECURED)
   const fetchAndDisplaySubjects = async () => {
     const token = getToken();
     if (!token) return;
@@ -73,7 +73,6 @@ document.addEventListener("DOMContentLoaded", () => {
       });
       const subjects = await response.json();
       if (subjects.message) {
-        // Handle token errors from backend
         handleLogout();
         return;
       }
@@ -86,7 +85,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <footer>
                 <p><strong>How it works:</strong></p>
                 <ul>
-                    <li><strong>Track Everything:</strong> Click the "Add New Subject" button in the header to start tracking your classes.</li>
+                    <li><strong>Track Everything:</strong> Click the "Add New Subject" button to start tracking your classes.</li>
                     <li><strong>Get Smart Advice:</strong> Each subject card will calculate your attendance and give you smart recommendations.</li>
                     <li><strong>View Your Progress:</strong> Every time you mark attendance, a permanent record is saved to your personal <strong>History</strong> page.</li>
                 </ul>
@@ -102,7 +101,27 @@ document.addEventListener("DOMContentLoaded", () => {
             pBarColor = "#dc3545";
           else if (subject.currentAttendance < subject.minAttendance + 5)
             pBarColor = "#ffc107";
-          card.innerHTML = `<h3>${subject.subjectName}</h3><div class="attendance-stats"><span>${subject.attendedClasses} / ${subject.totalClasses}</span><strong>${subject.currentAttendance}%</strong></div><div class="attendance-bar"><div class="attendance-progress" style="width: ${subject.currentAttendance}%; background-color: ${pBarColor};"></div></div><hr><p><strong>Bunks Available: ${subject.bunksPossible}</strong><br><small><em>${subject.recommendation}</em></small></p><div class="card-actions"><button class="attended-btn attendance-btn" data-subject-id="${subject._id}" data-status="attended">✔️ Attended</button><button class="bunked-btn attendance-btn" data-subject-id="${subject._id}" data-status="bunked">❌ Bunked</button></div>`;
+          card.innerHTML = `
+          <button class="delete-subject-btn secondary outline" data-subject-id="${subject._id}">X</button>
+    <h3>${subject.subjectName}</h3>
+    <div class="attendance-stats">
+        <span>${subject.attendedClasses} / ${subject.totalClasses} classes attended</span>
+        <strong>${subject.currentAttendance}%</strong>
+    </div>
+    <div class="attendance-bar">
+        <div class="attendance-progress" style="width: ${subject.currentAttendance}%; background-color: ${pBarColor};"></div>
+    </div>
+    <hr>
+    <p>
+        <strong>Bunks Available: ${subject.bunksPossible}</strong>
+        <br>
+        <small><em>${subject.recommendation}</em></small>
+    </p>
+    <div class="card-actions">
+        <button class="attended-btn attendance-btn" data-subject-id="${subject._id}" data-status="attended">✔️ Attended</button>
+        <button class="bunked-btn attendance-btn" data-subject-id="${subject._id}" data-status="bunked">❌ Bunked</button>
+    </div>
+`;
           subjectsContainer.appendChild(card);
         });
         document
@@ -110,9 +129,50 @@ document.addEventListener("DOMContentLoaded", () => {
           .forEach((button) =>
             button.addEventListener("click", handleAttendanceUpdate)
           );
+        document
+          .querySelectorAll(".delete-subject-btn")
+          .forEach((button) =>
+            button.addEventListener("click", handleSubjectDelete)
+          );
       }
     } catch (error) {
       subjectsContainer.innerHTML = `<p style="color: red;">Error fetching subjects: ${error.message}</p>`;
+    }
+  };
+
+  const handleSubjectDelete = async (event) => {
+    const button = event.target.closest("button");
+    const subjectId = button.dataset.subjectId;
+
+    // Important UX: Confirm with the user before deleting!
+    if (
+      !window.confirm(
+        "Are you sure you want to delete this subject and all its history? This action cannot be undone."
+      )
+    ) {
+      return;
+    }
+
+    const token = getToken();
+    if (!token) return;
+
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:5000/api/subjects/${subjectId}`,
+        {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (response.ok) {
+        // Refresh the dashboard to show the subject has been removed
+        fetchAndDisplaySubjects();
+      } else {
+        alert("Failed to delete the subject.");
+      }
+    } catch (error) {
+      alert("Error connecting to the server.");
     }
   };
 
@@ -326,7 +386,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  // --- Authentication Functions ---
+  //  Authentication Functions
   const handleRegistration = async (event) => {
     event.preventDefault();
     showMessage("register", "Registering...", false);
@@ -382,7 +442,7 @@ document.addEventListener("DOMContentLoaded", () => {
     updateView();
   };
 
-  // === 6. ATTACHING EVENT LISTENERS ===
+  //  ATTACHING EVENT LISTENERS
   if (registerForm) registerForm.addEventListener("submit", handleRegistration);
   if (loginForm) loginForm.addEventListener("submit", handleLogin);
   if (logoutBtn) logoutBtn.addEventListener("click", handleLogout);
@@ -449,6 +509,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // --- Initial Load ---
+  // Initial Load
   updateView();
 });
