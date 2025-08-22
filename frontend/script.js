@@ -1,4 +1,11 @@
 document.addEventListener("DOMContentLoaded", () => {
+  const isLive =
+    !window.location.hostname.includes("127.0.0.1") &&
+    window.location.protocol !== "file:";
+  const API_BASE_URL = isLive
+    ? "https://academiplan-naina.onrender.com"
+    : "http://127.0.0.1:5000";
+
   //GET ALL ELEMENT REFERENCES
   const allPages = document.querySelectorAll(".page");
   const authNav = document.getElementById("auth-nav");
@@ -68,7 +75,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const token = getToken();
     if (!token) return;
     try {
-      const response = await fetch("http://127.0.0.1:5000/api/subjects", {
+      const response = await fetch(`${API_BASE_URL}/api/subjects`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const subjects = await response.json();
@@ -156,7 +163,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     try {
       const response = await fetch(
-        `http://127.0.0.1:5000/api/subjects/${subjectId}`,
+        `${API_BASE_URL}/api/subjects/${subjectId}`,
         {
           method: "DELETE",
           headers: { Authorization: `Bearer ${token}` },
@@ -180,7 +187,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const formData = new FormData(addSubjectForm);
     const subjectData = Object.fromEntries(formData.entries());
     try {
-      const response = await fetch("http://127.0.0.1:5000/api/subjects", {
+      const response = await fetch(`${API_BASE_URL}/api/subjects`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -209,7 +216,7 @@ document.addEventListener("DOMContentLoaded", () => {
     button.disabled = true;
     button.textContent = "Updating...";
     try {
-      const response = await fetch("http://127.0.0.1:5000/api/attendance", {
+      const response = await fetch(`${API_BASE_URL}/api/attendance`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -230,7 +237,7 @@ document.addEventListener("DOMContentLoaded", () => {
     historyPageContainer.innerHTML =
       "<article><p>Loading history...</p></article>";
     try {
-      const response = await fetch("http://127.0.0.1:5000/api/history", {
+      const response = await fetch(`${API_BASE_URL}/api/history`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const historyLog = await response.json();
@@ -275,10 +282,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const token = getToken();
     if (!token) return;
     try {
-      const response = await fetch(
-        `http://127.0.0.1:5000/api/history/${recordId}`,
-        { method: "DELETE", headers: { Authorization: `Bearer ${token}` } }
-      );
+      const response = await fetch(`${API_BASE_URL}/api/history/${recordId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (response.ok) {
         fetchHistory();
       } else {
@@ -304,11 +311,19 @@ document.addEventListener("DOMContentLoaded", () => {
       editable: true,
       dateClick: (info) => {
         eventForm.reset();
-        const date = new Date(info.dateStr);
-        const startTime = date.toTimeString().substring(0, 5);
-        eventStartDateInput.value = date.toISOString().substring(0, 10);
-        document.getElementById("eventStartTime").value = startTime;
-        document.getElementById("eventEndTime").value = startTime;
+        const clickedDate = info.date;
+        const year = clickedDate.getFullYear();
+        const month = String(clickedDate.getMonth() + 1).padStart(2, "0");
+        const day = String(clickedDate.getDate()).padStart(2, "0");
+        const dateString = `${year}-${month}-${day}`;
+        const timeString =
+          String(clickedDate.getHours()).padStart(2, "0") +
+          ":" +
+          String(clickedDate.getMinutes()).padStart(2, "0");
+
+        eventStartDateInput.value = dateString;
+        document.getElementById("eventStartTime").value = timeString;
+        document.getElementById("eventEndTime").value = timeString;
         eventModal.showModal();
       },
       eventClick: (info) => {
@@ -317,7 +332,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       },
       events: (info, successCallback, failureCallback) => {
-        fetch("http://127.0.0.1:5000/api/events", {
+        fetch(`${API_BASE_URL}/api/events`, {
           headers: { Authorization: `Bearer ${token}` },
         })
           .then((res) => res.json())
@@ -340,7 +355,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const startDateTime = `${date}T${startTime}:00`;
     const endDateTime = `${date}T${endTime}:00`;
     try {
-      const response = await fetch("http://127.0.0.1:5000/api/events", {
+      const response = await fetch(`${API_BASE_URL}/api/events`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -369,10 +384,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const eventId = info.event.id;
     if (!token || !eventId) return;
     try {
-      const response = await fetch(
-        `http://127.0.0.1:5000/api/events/${eventId}`,
-        { method: "DELETE", headers: { Authorization: `Bearer ${token}` } }
-      );
+      const response = await fetch(`${API_BASE_URL}/api/events/${eventId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (response.ok) {
         info.event.remove();
       } else {
@@ -390,7 +405,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const username = document.getElementById("reg-username").value;
     const password = document.getElementById("reg-password").value;
     try {
-      const response = await fetch("http://127.0.0.1:5000/api/register", {
+      const response = await fetch(`${API_BASE_URL}/api/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
@@ -416,7 +431,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const username = document.getElementById("login-username").value;
     const password = document.getElementById("login-password").value;
     try {
-      const response = await fetch("http://127.0.0.1:5000/api/login", {
+      const response = await fetch(`${API_BASE_URL}/api/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
