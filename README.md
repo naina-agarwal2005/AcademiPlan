@@ -1,4 +1,4 @@
-### AcademiPlan: Your personal academic dashboard that helps answer the age-old question: "Should I bunk?"\*
+### AcademiPlan: Your personal academic dashboard that helps answer the age-old question: "Should I bunk?"
 
 A full-stack, single-page web application designed as an all-in-one dashboard to help students manage their academic life, including per-subject attendance tracking, smart recommendations, and an interactive daily planner.
 
@@ -30,10 +30,10 @@ A full-featured calendar (powered by FullCalendar.js) where users can add, view,
 
 ### Technology Stack
 
-| Category      | Technology                                                        |
-| :------------ | :---------------------------------------------------------------- |
-| **Front-End** | HTML5, CSS3, Vanilla JavaScript (ES6+), Pico.css, FullCalendar.js |
-| **Back-End**  | Python, Flask                                                     |
-| **Database**  | MongoDB (NoSQL) with PyMongo driver                               |
-| **Security**  | Werkzeug (for password hashing), PyJWT (for JSON Web Tokens)      |
-| **Tools**     | Git & GitHub, Visual Studio Code                                  |
+| Category      | Technology                                                   |
+| :------------ | :----------------------------------------------------------- |
+| **Front-End** | HTML5, CSS3, Vanilla JavaScript , Pico.css, FullCalendar.js  |
+| **Back-End**  | Python, Flask                                                |
+| **Database**  | MongoDB (NoSQL) with PyMongo driver                          |
+| **Security**  | Werkzeug (for password hashing), PyJWT (for JSON Web Tokens) |
+| **Tools**     | Git & GitHub, Visual Studio Code                             |
