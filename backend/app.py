@@ -1,4 +1,5 @@
 from functools import wraps
+import certifi
 import os
 from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
@@ -15,7 +16,7 @@ import math
 # client = MongoClient(MONGO_URI)
 MONGO_URI = os.environ.get('MONGO_URI', 'mongodb://localhost:27017/')
 if MONGO_URI.startswith('mongodb+srv'):
-    client = MongoClient(MONGO_URI, tls=True, tlsAllowInvalidCertificates=True)
+    client = MongoClient(MONGO_URI, tlsCAFile=certifi.where())
 else:
     client = MongoClient(MONGO_URI)
 db = client.academiplan_db
