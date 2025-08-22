@@ -128,7 +128,6 @@ def get_subjects(current_user):
         print(f"--- ERROR IN get_subjects ---: {e}")
         return jsonify({"error": "An internal server error occurred"}), 500
     
-# Add this new function to app.py to handle deleting a subject
 
 @app.route('/api/subjects/<subject_id>', methods=['DELETE'])
 @token_required
@@ -138,18 +137,12 @@ def delete_subject(current_user, subject_id):
     """
     try:
         subject_oid = ObjectId(subject_id)
-
-        # First, ensure the subject belongs to the current user before deleting
         subject_to_delete = subjects_collection.find_one(
             {'_id': subject_oid, 'userId': current_user['_id']}
         )
         if not subject_to_delete:
             return jsonify({"error": "Subject not found or permission denied"}), 404
-
-        # Step 1: Delete all attendance records linked to this subject
         attendance_records_collection.delete_many({'subjectId': subject_oid, 'userId': current_user['_id']})
-
-        # Step 2: Delete the subject document itself
         subjects_collection.delete_one({'_id': subject_oid})
         
         return jsonify({"message": "Subject and all related history deleted successfully"}), 200

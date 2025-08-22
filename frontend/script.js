@@ -63,7 +63,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  // API & CORE FUNCTIONS (SECURED)
+  // API & CORE FUNCTIONS
   const fetchAndDisplaySubjects = async () => {
     const token = getToken();
     if (!token) return;
@@ -143,8 +143,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const handleSubjectDelete = async (event) => {
     const button = event.target.closest("button");
     const subjectId = button.dataset.subjectId;
-
-    // Important UX: Confirm with the user before deleting!
     if (
       !window.confirm(
         "Are you sure you want to delete this subject and all its history? This action cannot be undone."
@@ -166,7 +164,6 @@ document.addEventListener("DOMContentLoaded", () => {
       );
 
       if (response.ok) {
-        // Refresh the dashboard to show the subject has been removed
         fetchAndDisplaySubjects();
       } else {
         alert("Failed to delete the subject.");
@@ -442,7 +439,7 @@ document.addEventListener("DOMContentLoaded", () => {
     updateView();
   };
 
-  //  ATTACHING EVENT LISTENERS
+  //  EVENT LISTENERS
   if (registerForm) registerForm.addEventListener("submit", handleRegistration);
   if (loginForm) loginForm.addEventListener("submit", handleLogin);
   if (logoutBtn) logoutBtn.addEventListener("click", handleLogout);

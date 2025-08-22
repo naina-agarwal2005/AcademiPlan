@@ -15,7 +15,6 @@ main.container {
   padding-top: 0;
 }
 
-/*  Authentication Page Styles  */
 #login-page article,
 #register-page article {
   max-width: 450px;
@@ -29,7 +28,6 @@ main.container {
   min-height: 1.5em;
 }
 
-/* Page & Tab Navigation  */
 .page,
 .sub-page {
   display: none;
@@ -39,7 +37,6 @@ main.container {
   display: block;
 }
 
-/* Dashboard & Subject Card Styles */
 #subjects-container {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -176,9 +173,8 @@ button.bunked-btn {
   margin-top: 1rem;
 }
 
-/* Style for the Delete Subject Button */
 .subject-card {
-  position: relative; /* Needed for positioning the button inside */
+  position: relative;
 }
 
 .delete-subject-btn {
@@ -188,13 +184,13 @@ button.bunked-btn {
   padding: 0;
   width: 2rem;
   height: 2rem;
-  border-radius: 50%; /* Makes it a circle */
+  border-radius: 50%;
   line-height: 1;
   border: none;
   font-weight: bold;
-} /* Style for the Delete Subject Button */
+}
 .subject-card {
-  position: relative; /* Needed for positioning the button inside */
+  position: relative;
 }
 
 .delete-subject-btn {
@@ -204,7 +200,7 @@ button.bunked-btn {
   padding: 0;
   width: 2rem;
   height: 2rem;
-  border-radius: 50%; /* Makes it a circle */
+  border-radius: 50%;
   line-height: 1;
   border: none;
   font-weight: bold;
