@@ -1,4 +1,5 @@
 from functools import wraps
+import os
 from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
 from datetime import datetime, timedelta, timezone
@@ -9,8 +10,14 @@ from bson.objectid import ObjectId
 import math
 
 # Database & App Setup 
-MONGO_URI = "mongodb://localhost:27017/"
-client = MongoClient(MONGO_URI)
+# MONGO_URI = "mongodb+srv://nainaa4115:hdoBMeHoKTRBKZCZ@dcluster0.z8gnbly.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+# MONGO_URI = "mongodb://localhost:27017/"
+# client = MongoClient(MONGO_URI)
+MONGO_URI = os.environ.get('MONGO_URI', 'mongodb://localhost:27017/')
+if MONGO_URI.startswith('mongodb+srv'):
+    client = MongoClient(MONGO_URI, tls=True, tlsAllowInvalidCertificates=True)
+else:
+    client = MongoClient(MONGO_URI)
 db = client.academiplan_db
 subjects_collection = db.subjects
 attendance_records_collection = db.attendance_records
