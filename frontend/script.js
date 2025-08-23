@@ -509,9 +509,14 @@ document.addEventListener("DOMContentLoaded", () => {
     )
       subjectModal.close();
   });
+
   eventModal.addEventListener("click", (event) => {
-    if (event.target === eventModal || event.target.classList.contains("close"))
+    if (event.target.classList.contains("close")) {
       eventModal.close();
+    }
+    if (event.target.nodeName === "DIALOG") {
+      eventModal.close();
+    }
   });
 
   if (brandLink) {
